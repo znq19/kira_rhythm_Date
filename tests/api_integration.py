@@ -61,6 +61,10 @@ def run(framework: Path, plugin_root: Path):
         async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.get(f"{base}/bootstrap")
             assert response.status_code == 200, response.text
+            boot = response.json()
+            assert isinstance(boot["all_sessions"], list)
+            sessions_all = await client.get(f"{base}/sessions?scope=all")
+            assert sessions_all.status_code == 200 and isinstance(sessions_all.json(), list)
             avatar = await client.get(f"{base}/avatar?refresh=1")
             assert avatar.status_code == 200 and avatar.headers["cache-control"] == "no-store, max-age=0"
             calendar = await client.get(f"{base}/calendar?start=2026-02-17&end=2026-02-18")

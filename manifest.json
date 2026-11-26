@@ -1,7 +1,7 @@
 {
   "display_name": "生活节律·日程插件",
   "plugin_id": "kira_rhythm_Date",
-  "version": "1.3.5",
+  "version": "1.3.7",
   "author": "znq19",
   "description": "让每个人格都能规划、感知并主动调整自己的生活：日型、日程组、随机与概率触发、每日状态、目标与约定、梦境、天气和可视化面板。",
   "repo": "https://github.com/znq19/kira_rhythm_Date",

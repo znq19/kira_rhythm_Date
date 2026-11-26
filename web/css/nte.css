@@ -406,6 +406,7 @@ input[type="checkbox"] { accent-color:var(--nte-pink); }
 .review-setting { border-radius:0; }
 .current-location { border-radius:0; }
 .session-picker { border-radius:0; }
+.session-picker label.missing { border-style:dashed; opacity:.72; }
 
 /* Boot and loading */
 .boot-screen { background:#05070b; }

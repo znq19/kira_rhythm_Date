@@ -45,7 +45,7 @@ def main(root: Path):
     app = (root / "web" / "js" / "app.js").read_text()
     assert "second: '2-digit'" in app
     assert "includeSeconds" in (root / "web" / "js" / "store.js").read_text()
-    assert "ASSET_VERSION = '1.3.5.1'" in app and "?v=1.3.5.1" in index
+    assert "ASSET_VERSION = '1.3.7'" in app and "?v=1.3.7" in index
     views = (root / "web" / "js" / "views.js").read_text()
     assert views.count('type="time" step="1"') >= 4
     assert "interval_seconds" in views

@@ -17,7 +17,8 @@ from krd import tools as _tools  # noqa: F401
 PLAN_ITEM_SCHEMA = {
     "type": "object",
     "properties": {
-        "block": {"type": "string", "description": "可选分组名；同名小项归入同一组，省略时归入“生活片段”。"},
+        "block": {"type": "string", "description": "可选分组名；同一组的小项使用相同名称。"},
+        "id": {"type": "string", "description": "修订已有小项时沿用 current_plan 中的短 ID（8 位，可带 #）；新建小项省略。"},
         "title": {"type": "string", "description": "小项标题。"},
         "intent": {"type": "string", "description": "为什么安排这个小项。"},
         "instruction": {"type": "string", "description": "小项触发时具体做什么。"},
@@ -74,7 +75,7 @@ class KRDPlugin(ApiMixin, BasePlugin):
 
     @register.tool(
         name="rhythm_plan",
-        description="创建/修订生活计划。plans:[{date,title,items:[...]}]；items 扁平，block 可选，时间 at 或 start/end（HH:MM[:SS]），不嵌套 schedule；用户指定日期/规划 focus.date 优先。修订已有计划时 plans[].expected_revision=current_plan.revision。上下文有 threads_requiring_response 时必须先逐条回应，只有 threads_reference 时不要求；reject 缺回应会拒绝，warn 只警告。",
+        description="创建/修订生活计划。plans:[{date,title,items:[...]}]；items 扁平，block 为分组名（同名归组），时间 at 或 start/end（HH:MM[:SS]），不嵌套 schedule；用户指定日期/规划 focus.date 优先。修订已有计划时 plans[].expected_revision=current_plan.revision；沿用 items[].id（8 位短 ID）可保留小项身份。上下文有 threads_requiring_response 时必须先逐条回应，只有 threads_reference 时不要求；reject 缺回应会拒绝，warn 只警告。",
         params={"type": "object", "properties": {
             "plans": {"type": "array", "items": PLAN_SCHEMA, "minItems": 1, "maxItems": 31},
             "mode": {"type": "string", "enum": ["create", "create_missing", "revise", "merge", "replace"], "default": "revise"},

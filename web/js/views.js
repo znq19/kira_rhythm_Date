@@ -1,5 +1,5 @@
-import { fmt } from './store.js?v=1.3.5.1'
-import { planTemplates, themeTemplates } from './templates.js?v=1.3.5.1'
+import { fmt } from './store.js?v=1.3.7'
+import { planTemplates, themeTemplates } from './templates.js?v=1.3.7'
 
 const ICON_PATHS = {
   home: ['M3 11.5 12 4l9 7.5', 'M5.5 10.5V20h13v-9.5', 'M9.5 20v-6h5v6'],
@@ -570,7 +570,7 @@ export const TemplateEditor = {
             <label v-if="item.schedule.type === 'exact'"><span>执行时间</span><input type="time" step="1" v-model="item.schedule.at"></label>
             <template v-else><label><span>窗口开始</span><input type="time" step="1" v-model="item.schedule.start"></label><label><span>窗口结束</span><input type="time" step="1" v-model="item.schedule.end"></label></template>
             <label><span>互动方式</span><select v-model="item.interaction"><option value="auto">自由决定</option><option value="must_message">需要发言</option><option value="silent">安静经历</option></select></label>
-            <label><span>目标会话</span><select v-model="item.target"><option value="">执行池自动选择</option><option v-for="session in $root.data.sessions" :value="session.sid">{{ session.title }} · {{ session.sid }}</option></select></label>
+            <label><span>目标会话</span><select v-model="item.target"><option value="">执行池自动选择</option><option v-if="item.target && !$root.data.sessions.some(s => s.sid === item.target)" :value="item.target">{{ $root.sessionName(item.target) || '未加载的会话' }} · {{ item.target }}（当前）</option><option v-for="session in $root.data.sessions" :value="session.sid">{{ session.title }} · {{ session.sid }}</option></select></label>
             <label class="wide"><span>执行提示</span><textarea rows="2" v-model="item.instruction" placeholder="小项执行时真正要做什么。"></textarea></label>
           </div>
           <div class="template-item-actions"><button class="text-button muted" @click="removeItem(block, itemIndex)">删除小项</button></div>
@@ -729,11 +729,11 @@ export const SettingsView = {
         <span class="eyebrow">会话权限</span><h2>允许生活在哪些地方发生</h2>
         <p class="field-hint">会话权限是总开关，会同时限制规划和执行两个池。两个池留空时，会自动使用权限范围内的全部会话；不需要把同一批会话再勾一遍。只有想进一步缩小某个池的范围时，才勾选该池；池中已被权限排除的会话不会生效。</p>
         <label class="full-field"><span>名单模式</span><small>黑名单：默认允许全部，只排除勾选会话；白名单：只有勾选的会话能参与。</small><select v-model="$root.draft.session_access.mode"><option value="deny_list">黑名单：默认全部允许</option><option value="allow_list">白名单：仅列表允许</option></select></label>
-        <div class="session-picker"><label v-for="session in $root.allSessions" :class="{selected: $root.draft.session_access.sessions.includes(session.sid)}"><input type="checkbox" :checked="$root.draft.session_access.sessions.includes(session.sid)" @change="$root.toggleAccess(session.sid)"><span>{{ session.title }}</span><small>{{ session.sid }}</small></label></div>
+        <div class="session-picker"><label v-for="session in $root.allSessions" :class="{selected: $root.draft.session_access.sessions.includes(session.sid), missing: session.missing}"><input type="checkbox" :checked="$root.draft.session_access.sessions.includes(session.sid)" @change="$root.toggleAccess(session.sid)"><span>{{ session.title }}</span><small>{{ session.sid }}</small></label></div>
         <div v-for="kind in ['planning', 'execution']" class="pool-editor"><h3>{{ kind === 'planning' ? '规划起始会话池' : '小项执行会话池' }}</h3>
           <label class="full-field"><span>选择策略</span><small>会话池里有多个会话时如何挑一个；不确定选“完全随机”。</small><select v-model="$root.draft[kind + '_pool'].strategy"><option value="pure_random">完全随机</option><option value="no_immediate_repeat">避免连续重复</option><option value="shuffle_bag">一轮内不重复</option><option value="round_robin">顺序轮换</option><option value="weighted_random">加权随机</option></select></label>
           <p class="field-hint">留空 = 自动使用权限范围内的全部会话；勾选后只使用池内会话。权限外或已停用的会话不会生效。</p>
-          <div class="session-picker"><label v-for="session in $root.allSessions" :class="{selected: $root.draft[kind + '_pool'].sessions.some(v => (v.sid || v) === session.sid)}"><input type="checkbox" :checked="$root.draft[kind + '_pool'].sessions.some(v => (v.sid || v) === session.sid)" @change="$root.togglePool(kind, session.sid)"><span>{{ session.title }}</span><small>{{ session.sid }}</small></label></div>
+          <div class="session-picker"><label v-for="session in $root.allSessions" :class="{selected: $root.draft[kind + '_pool'].sessions.some(v => (v.sid || v) === session.sid), missing: session.missing}"><input type="checkbox" :checked="$root.draft[kind + '_pool'].sessions.some(v => (v.sid || v) === session.sid)" @change="$root.togglePool(kind, session.sid)"><span>{{ session.title }}</span><small>{{ session.sid }}</small></label></div>
         </div>
       </section>
       <section v-if="$root.settingsTab === 'weather'" class="settings-section">
@@ -841,7 +841,7 @@ export const ItemEditor = {
         <template v-if="schedule.window_mode === 'interval_random'"><label><span>最小间隔（秒）</span><input type="number" min="1" step="1" v-model.number="intervalMin"></label><label><span>最大间隔（秒）</span><input type="number" min="1" step="1" v-model.number="intervalMax"></label></template>
       <label><span>执行概率</span><input type="number" min="0" max="1" step="0.05" v-model.number="form.execution_probability"></label>
       <label><span>分类</span><input v-model="form.category" placeholder="例如：阅读、运动"></label>
-      <label class="wide"><span>目标会话（留空使用执行池）</span><select v-model="form.target"><option value="">执行会话池自动选择</option><option v-for="session in $root.data.sessions" :value="session.sid">{{ session.title }} · {{ session.sid }}</option></select></label>
+      <label class="wide"><span>目标会话（留空使用执行池）</span><select v-model="form.target"><option value="">执行会话池自动选择</option><option v-if="form.target && !$root.data.sessions.some(s => s.sid === form.target)" :value="form.target">{{ $root.sessionName(form.target) || '未加载的会话' }} · {{ form.target }}（当前）</option><option v-for="session in $root.data.sessions" :value="session.sid">{{ session.title }} · {{ session.sid }}</option></select></label>
     </div>
     <div class="modal-actions"><button class="soft-button" @click="$root.closeEditor">取消</button><button class="primary" @click="$root.saveItem(form)">保存并校验</button></div>
   </div></div>`,

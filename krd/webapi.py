@@ -84,6 +84,7 @@ async def bootstrap(runtime, persona_id: str = "") -> dict[str, Any]:
         },
         "global_revision": await runtime.store.config_revision(""),
         "sessions": await runtime.policy.session_options(persona_id, "execution"),
+        "all_sessions": await runtime.policy.session_catalog(persona_id),
         "planning_sessions": await runtime.policy.session_options(persona_id, "planning"),
         # Initial paint never waits for a remote weather provider. The frontend
         # starts the normal TTL-coalesced refresh after applying this snapshot.

@@ -35,6 +35,16 @@ class SessionPolicy:
                 result.append(session)
         return result
 
+    async def session_catalog(self, persona_id: str | None = None) -> list[dict[str, str]]:
+        """Every IM session, before access or pool filters.
+
+        The WebUI needs the full list so a blacklist can be edited (denied
+        sessions must stay visible) and sessions can be added to a pool.
+        """
+        sessions = await self._im_sessions()
+        return [{"sid": session.sid, "title": session.session_title or session.sid,
+                 "adapter": session.adapter_name} for session in sessions]
+
     async def session_options(self, persona_id: str, kind: str = "execution", *,
                               config: dict | None = None) -> list[dict[str, str]]:
         config = config or await self.store.get_config(persona_id)

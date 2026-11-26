@@ -29,7 +29,7 @@ const plan = {
 const config = {
   schema_version: 1, enabled: true, auto_plan: true, startup_plan: false, plan_on_all_triggered: true, all_triggered_target_mode: 'planning_pool', planning_review: { enabled: false, interval_minutes: 360, min_lead_minutes: 30, prompt: '检查当前计划是否仍然合适。' }, planning_time: '23:00', planning_mode: 'next_missing',
   min_items: 2, max_items: 12, max_horizon_days: 14, allow_exact: true, allow_window: true, allow_probability: true,
-  default_probability: 1, min_probability: .2, session_access: { mode: 'deny_list', sessions: [] },
+  default_probability: 1, min_probability: .2, session_access: { mode: 'allow_list', sessions: ['qq:dm:10001', 'qq:dm:99999'] },
   planning_pool: { sessions: [], strategy: 'pure_random' }, execution_pool: { sessions: [], strategy: 'pure_random' },
   modify_window_seconds: 86400, max_change_units: 0, history_days: 3, history_char_budget: 16000, diff_revisions: 2,
   recovery_grace_seconds: 600, history_mode: 'notice', inject_day_state: true, inject_agenda: true, agenda_max_chars: 2400, approval_required: false, timezone: 'system',
@@ -45,7 +45,8 @@ const data = {
   day_types: [{ id: 'weekday', name: '工作日', builtin: 1, rules: {}, config: { color: '#7c8cf8' } }, { id: 'weekend', name: '周末', builtin: 1, rules: {}, config: { color: '#ad7cf8' } }, { id: 'dream_day', name: '做梦的日子', builtin: 0, rules: {}, config: { color: '#77d6b3' } }],
   config, config_revision: 3, global_revision: 3,
   prompt_defaults: { planning_prompt: config.planning_prompt, execution_prompt: config.execution_prompt, planning_review_prompt: config.planning_review.prompt },
-  sessions: [{ sid: 'qq:dm:10001', title: '与爱奈的夜晚', adapter: 'qq' }, { sid: 'qq:gm:70001', title: '小小读书会', adapter: 'qq' }],
+  sessions: [{ sid: 'qq:dm:10001', title: '与爱奈的夜晚', adapter: 'qq' }],
+  all_sessions: [{ sid: 'qq:dm:10001', title: '与爱奈的夜晚', adapter: 'qq' }, { sid: 'qq:gm:70001', title: '小小读书会', adapter: 'qq' }, { sid: 'qq:dm:20002', title: '未加入权限的会话', adapter: 'qq' }],
   planning_sessions: [{ sid: 'qq:dm:10001', title: '与爱奈的夜晚', adapter: 'qq' }],
   weather: { mode: 'real', real: { source: 'real', location: '上海', condition: '局部多云', temperature: 23.4, status: 'fresh' } },
   weather_forecast: (() => {
@@ -138,7 +139,7 @@ window.fetch = async (url, options = {}) => {
   if (path.includes('/runs')) return response([{ item_id: 'i1', status: 'finalized', probability: 1, claimed_at: at(8, 42) }, { item_id: 'i2', status: 'finalized', probability: 1, claimed_at: at(10) }])
   if (path.includes('/diagnostics')) return response({ counts: { plans: 8, items: 34, runs: 21 }, scheduler: { running: true }, database: 'SQLite WAL', websocket_clients: 1 })
   if (path.includes('/day-types')) return response(data.day_types)
-  if (path.includes('/sessions')) return response(data.sessions)
+  if (path.includes('/sessions')) return response(path.includes('scope=all') ? data.all_sessions : data.sessions)
   if (path.includes('/templates')) return response([])
   return response({ ok: true })
 }

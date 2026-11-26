@@ -278,8 +278,10 @@ class ApiMixin:
         return await self._call(remove)
 
     @register.api(method="GET", path="/v1/sessions")
-    async def api_sessions(self, kind: str = "execution", persona: str = ""):
+    async def api_sessions(self, kind: str = "execution", scope: str = "pool", persona: str = ""):
         persona_id = await self._persona(persona)
+        if scope == "all":
+            return await self.runtime.policy.session_catalog(persona_id)
         return await self.runtime.policy.session_options(persona_id, kind)
 
     @register.api(method="GET", path="/v1/weather/current")

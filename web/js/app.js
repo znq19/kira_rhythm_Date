@@ -1,13 +1,13 @@
-import { get, post, put, patch, upload, socket, ready } from './api.js?v=1.3.5.1'
-import { state, loadBootstrap, loadPlan, saveConfig, notify, fmt } from './store.js?v=1.3.5.1'
-import { UiIcon, TodayView, CalendarView, ChangesView, ThreadsView, TemplatesView, SettingsView, ItemEditor, DayStateEditor, DayTypeEditor, TemplateEditor, ThreadEditor, ThreadTouch, PlanBrief } from './views.js?v=1.3.5.1'
-import { planTemplates, themeTemplates } from './templates.js?v=1.3.5.1'
-import { PetCompanion } from './pet.js?v=1.3.5.1'
+import { get, post, put, patch, upload, socket, ready } from './api.js?v=1.3.7'
+import { state, loadBootstrap, loadPlan, saveConfig, notify, fmt } from './store.js?v=1.3.7'
+import { UiIcon, TodayView, CalendarView, ChangesView, ThreadsView, TemplatesView, SettingsView, ItemEditor, DayStateEditor, DayTypeEditor, TemplateEditor, ThreadEditor, ThreadTouch, PlanBrief } from './views.js?v=1.3.7'
+import { planTemplates, themeTemplates } from './templates.js?v=1.3.7'
+import { PetCompanion } from './pet.js?v=1.3.7'
 
 const clone = (value) => JSON.parse(JSON.stringify(value))
 const typeOfSeconds = (value) => !Number.isInteger(value)
 const MIN_REFRESH_SPIN_MS = 420
-const ASSET_VERSION = '1.3.5.1'
+const ASSET_VERSION = '1.3.7'
 const assetBase = window.PluginPageContext?.assetBase || '/static/plugin/kira_rhythm_Date/assets'
 const dateShift = (date, days) => {
   const value = new Date(`${date}T12:00:00Z`)
@@ -680,7 +680,7 @@ const app = Vue.createApp({
     sessionEntry(target) {
       const value = String(target || '').trim()
       if (!value) return null
-      const pool = [...(this.data.sessions || []), ...(this.data.planning_sessions || [])]
+      const pool = [...(this.data.sessions || []), ...(this.data.planning_sessions || []), ...(this.data.all_sessions || [])]
       return pool.find((entry) => {
         const id = typeof entry === 'string' ? entry : entry?.sid || entry?.id
         return id === value
@@ -1273,9 +1273,25 @@ const app = Vue.createApp({
       if (typeOfSeconds(review.interval_seconds)) review.interval_seconds = Math.round(Number(review.interval_minutes) * 60)
       if (typeOfSeconds(review.min_lead_seconds)) review.min_lead_seconds = Math.round(Number(review.min_lead_minutes) * 60)
       this.settingsBaseRevision = this.data.config_revision || 0
-      this.allSessions = this.data.sessions || []
+      this.allSessions = this.buildSessionCatalog()
       this.diagnostics = null
       this.loadWeatherCredentials().catch(() => {})
+    },
+    buildSessionCatalog() {
+      const catalog = [...(this.data.all_sessions || this.data.sessions || [])]
+      const seen = new Set(catalog.map((entry) => entry.sid))
+      const configured = [
+        ...(this.draft.session_access?.sessions || []).map((value) => value?.sid || value),
+        ...(this.draft.planning_pool?.sessions || []).map((value) => value?.sid || value),
+        ...(this.draft.execution_pool?.sessions || []).map((value) => value?.sid || value),
+      ]
+      for (const raw of configured) {
+        const sid = String(raw || '').trim()
+        if (!sid || seen.has(sid)) continue
+        seen.add(sid)
+        catalog.push({ sid, title: '未加载的会话', adapter: '', missing: true })
+      }
+      return catalog
     },
     toggleAccess(sid) {
       const values = this.draft.session_access.sessions
@@ -1403,7 +1419,7 @@ const app = Vue.createApp({
 })
 
 // Keep the delete helper out of the component's public API surface.
-import { del as requestDelete } from './api.js?v=1.3.5.1'
+import { del as requestDelete } from './api.js?v=1.3.7'
 
 app.component('UiIcon', UiIcon)
 app.config.errorHandler = (err, vm, info) => { window.__krdVueError = String(err?.stack || err) + '\n' + info + '\nvm=' + (vm?.$options?.name || vm?.$?.type?.__name || vm?.$?.type?.name || 'unknown'); console.error(err, info, vm) }

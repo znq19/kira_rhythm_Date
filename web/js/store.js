@@ -1,4 +1,4 @@
-import { get, put } from './api.js?v=1.3.5.1'
+import { get, put } from './api.js?v=1.3.7'
 
 export const state = Vue.reactive({
   loading: true,

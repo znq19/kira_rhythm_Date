@@ -125,3 +125,35 @@ def test_plan_brief_shows_revision_reason():
     assert "plan-brief-reason" in views and ".plan-brief-reason" in css
     assert '<plan-brief v-if="$root.selectedPlan"' in views
     assert "revision_reason" in fixture and "revision_actor" in fixture and "planning_reason" in fixture
+
+
+def test_session_access_picker_uses_unfiltered_catalog():
+    app = (WEB / "app.js").read_text(encoding="utf-8")
+    views = (WEB / "views.js").read_text(encoding="utf-8")
+    policy = (ROOT / "krd" / "policy.py").read_text(encoding="utf-8")
+    webapi = (ROOT / "krd" / "webapi.py").read_text(encoding="utf-8")
+    fixture = (ROOT / "tests" / "web_fixture.js").read_text(encoding="utf-8")
+
+    assert "session_catalog" in policy and "all_sessions" in webapi
+    assert "buildSessionCatalog" in app and "data.all_sessions" in app
+    assert "未加载的会话" in app
+    assert "missing: session.missing" in views
+    assert "（当前）" in views
+    assert "all_sessions" in fixture
+
+
+def test_plan_item_id_and_block_prompt_contract():
+    main = (ROOT / "main.py").read_text(encoding="utf-8")
+    runtime = (ROOT / "krd" / "runtime.py").read_text(encoding="utf-8")
+    assert '"block": {"type": "string", "description": "可选分组名；同一组的小项使用相同名称。"}' in main
+    assert "省略时归入" not in main
+    assert '"id": {"type": "string"' in main
+    assert "8 位" in main and "短 ID" in main
+
+    description = re.search(
+        r'name="rhythm_plan",\s*\n\s*description="(.*?)",\n\s*params=', main, re.S).group(1)
+    guide = re.search(r'STATIC_TOOL_GUIDE = """(.*?)"""\.strip\(\)', runtime, re.S).group(1)
+    for text in (description, guide):
+        assert "block 为分组名（同名归组）" in text
+        assert "items[].id" in text
+        assert "生活片段" not in text

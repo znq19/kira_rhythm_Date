@@ -20,8 +20,8 @@ STATIC_TOOL_GUIDE = """
 [KRD 生活节律]
 
 工具：rhythm_plan 创建/修订计划；rhythm_update 改日程/DayState/目标/梦与体验；rhythm_view 查询。
-计划用 plans:[{date,title,items:[...]}]；items 扁平，block 可选，时间 at 或 start/end（HH:MM[:SS]），不嵌套 blocks/schedule；规划优先 focus.date。
-修订已有计划必须带 plans[].expected_revision=current_plan.revision，不重复新建。
+计划用 plans:[{date,title,items:[...]}]；items 扁平，block 为分组名（同名归组），时间 at 或 start/end（HH:MM[:SS]），不嵌套 blocks/schedule；规划优先 focus.date。
+修订已有计划必须带 plans[].expected_revision=current_plan.revision，不重复新建；带 items[].id 可保留身份与采样。
 有 threads_requiring_response 时先逐条 thread_response（advance/defer/waiting/no_change + 依据）；只有 threads_reference 时不要求。
 普通响应即触发，<msg/> 合法；只执行 current_item.instruction；回顾非强制，不要为检查制造修改。
 目标层启用时用 thread_add/thread_touch（执行小项带 item_id）；梦/体验用 record_experience 记录；遵守权限、数量、概率、日型、禁止/安静/必需覆盖规则。
